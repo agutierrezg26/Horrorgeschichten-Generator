@@ -58,10 +58,45 @@ button:hover {
 #einfuhrung { color: #fff; }
 #entwicklung { color: #ccc; margin-top: 10px; display: none; }
 #konsequenz { color: #ccc; margin-top: 10px; display: none; }
-.option-buttons { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 20px; }
-.option-buttons button { width: 90%; max-width: 500px; background-color: #333; }
-.option-buttons button:hover { background-color: #555; }
-#endgeschichte { background: #222; border-radius: 10px; padding: 15px; margin-top: 20px; width: 90%; max-width: 700px; margin-inline: auto; min-height: 150px; overflow-y: auto; text-align: left; display: none; }
+
+.option-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.option-buttons button {
+  width: 90%;
+  max-width: 500px;
+  background-color: #333;
+}
+
+.option-buttons button:hover {
+  background-color: #555;
+}
+
+#konsequenzButtonTriggerContainer {
+  opacity: 0;
+  margin-top: 20px;
+  text-align: center;
+  transition: opacity 0.8s;
+}
+
+#endgeschichte {
+  background: #222;
+  border-radius: 10px;
+  padding: 15px;
+  margin-top: 20px;
+  width: 90%;
+  max-width: 700px;
+  margin-inline: auto;
+  min-height: 150px;
+  overflow-y: auto;
+  text-align: left;
+  display: none;
+}
 
 @media (max-width: 600px) {
   h1 { font-size: 1.8rem; }
@@ -74,8 +109,6 @@ button:hover {
 <body>
 
 <h1>🕯️ Horrorgeschichten-Generator</h1>
-
-<p></p>
 
 <select id="personSelect"></select>
 <select id="ortSelect"></select>
@@ -95,9 +128,8 @@ button:hover {
   <div class="option-buttons" id="entwicklungButtons"></div>
 </div>
 
-<!-- Botón intermedio para Konsequenz, siempre visible pero inicialmente invisible con opacidad -->
-<div id="konsequenzButtonTriggerContainer" style="opacity:0; margin-top:20px; text-align:center;">
-  <button id="showKonsequenzBtn">Und nun?</button>
+<div id="konsequenzButtonTriggerContainer">
+  <button id="showKonsequenzBtn">Was ist danach passiert?</button>
 </div>
 
 <div class="section" id="konsequenz">
@@ -105,77 +137,94 @@ button:hover {
 </div>
 
 <div id="endgeschichte">
-
   <div id="finalText"></div>
 </div>
 
 <script>
-// Historias simplificadas A2
-const geschichten = [
-  {
-    person: "eine Schülerin", pronomen: "sie", ort: "in einem alten Haus", ereignis: "hörte ein seltsames Geräusch",
-    einfuhrung: "Es war eine kalte Nacht. Alles war still.",
-    entwicklungen: [
-      "sie öffnete die Tür langsam. Drinnen war es dunkel.",
-      "sie sah ein altes Buch auf dem Tisch. Es war sehr alt.",
-      "sie hörte Schritte hinter sich. Niemand war da."
-    ]
-  },
-  {
-    person: "ein junger Mann", pronomen: "er", ort: "im dunklen Wald", ereignis: "bemerkte, dass die Tür offen war",
-    einfuhrung: "Der Wald war dunkel. Er hörte den Wind in den Bäumen.",
-    entwicklungen: [
-      "er ging den Weg entlang. Er hörte ein Geräusch.",
-      "er sah einen Schatten zwischen den Bäumen.",
-      "er fand eine kleine Hütte. Die Tür war offen."
-    ]
-  }
+// Datos base: personajes, lugares, eventos
+const personen = [
+  { name: "eine junge Frau", pronomen: "sie" },
+  { name: "ein alter Mann", pronomen: "er" },
+  { name: "ein Kind", pronomen: "es" },
+  { name: "eine Katze", pronomen: "sie" },
 ];
 
-// Consecuencias para el paso final
+const orte = [
+  "in einem alten Haus",
+  "im dunklen Wald",
+  "in einer verlassenen Schule",
+  "in einem kalten Keller",
+  "auf dem Friedhof",
+];
+
+const ereignisse = [
+  "hörte ein seltsames Geräusch",
+  "bemerkte, dass die Tür offen war",
+  "sah einen Schatten an der Wand",
+  "fand ein altes Buch auf dem Tisch",
+];
+
+// Frases para la introducción según tono genérico
+const einleitungen = [
+  "Es war eine kalte Nacht. Alles war still.",
+  "Draußen wehte der Wind. Der Mond war voll.",
+  "Es war spät, und niemand war mehr draußen.",
+  "Eine dunkle Wolke zog über den Himmel.",
+];
+
+// Opciones de desarrollo (neutrales, adaptadas por pronombre)
+const entwicklungen = [
+  "{PRONOMEN} öffnete die Tür langsam. Drinnen war es dunkel.",
+  "{PRONOMEN} hörte plötzlich Schritte hinter sich.",
+  "{PRONOMEN} fand ein altes Foto auf dem Boden.",
+  "{PRONOMEN} ging vorsichtig weiter, das Herz klopfte schnell.",
+];
+
+// Consecuencias finales (adaptadas automáticamente)
 function getConsequences(pronomen) {
   return [
-    capitalizeFirstLetter(pronomen) + " war sehr überrascht und wusste nicht, was passieren würde.",
-    capitalizeFirstLetter(pronomen) + " hatte Angst, aber ging vorsichtig weiter.",
-    capitalizeFirstLetter(pronomen) + " hörte ein Geräusch und blieb stehen."
+    capitalizeFirstLetter(pronomen) + " hatte große Angst, aber wollte mehr wissen.",
+    capitalizeFirstLetter(pronomen) + " blieb stehen und hörte genau hin.",
+    capitalizeFirstLetter(pronomen) + " war sehr überrascht und wusste nicht, was passierte.",
   ];
 }
 
-// Poblar selects
+// Poblar los selects
 const personSelect = document.getElementById("personSelect");
-const ortSelect = document.getElementById("ortSelect");
-const ereignisSelect = document.getElementById("ereignisSelect");
+personen.forEach(p => personSelect.add(new Option(p.name, p.name)));
 
-geschichten.forEach(g => {
-  if([...personSelect.options].every(o => o.value !== g.person)) personSelect.add(new Option(capitalizeFirstLetter(g.person), g.person));
-  if([...ortSelect.options].every(o => o.value !== g.ort)) ortSelect.add(new Option(g.ort, g.ort));
-  if([...ereignisSelect.options].every(o => o.value !== g.ereignis)) ereignisSelect.add(new Option(g.ereignis, g.ereignis));
-});
+const ortSelect = document.getElementById("ortSelect");
+orte.forEach(o => ortSelect.add(new Option(o, o)));
+
+const ereignisSelect = document.getElementById("ereignisSelect");
+ereignisse.forEach(e => ereignisSelect.add(new Option(e, e)));
 
 let story = "";
+let pronomen = "";
 
-// Capitalizar primera letra
+// Capitalizar
 function capitalizeFirstLetter(text) {
   if(!text) return "";
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-// Einfuhrung
+// Inicio
 function einfuhrung() {
-  const person = personSelect.value;
+  const personObj = personen.find(p => p.name === personSelect.value);
+  pronomen = personObj.pronomen;
   const ort = ortSelect.value;
   const ereignis = ereignisSelect.value;
-  const hist = geschichten.find(h => h.person === person && h.ort === ort && h.ereignis === ereignis);
-  if(!hist) { alert("Keine passende Geschichte gefunden."); return; }
+  const intro = einleitungen[Math.floor(Math.random() * einleitungen.length)];
 
-  story = capitalizeFirstLetter(hist.einfuhrung) + " " + capitalizeFirstLetter(hist.person) + " " + hist.ort + " " + hist.ereignis + ".";
+  story = `${intro} ${capitalizeFirstLetter(personObj.name)} ${ort} ${ereignis}.`;
   document.getElementById("einfuhrungText").innerText = story;
   document.getElementById("einfuhrung").style.opacity = 1;
 
+  // mostrar después de 5 segundos
   setTimeout(() => document.getElementById("entwicklungButtonContainer").style.display = "block", 5000);
 }
 
-// Entwicklung
+// Desarrollo
 function zeigeEntwicklung() {
   const entwicklungDiv = document.getElementById("entwicklung");
   entwicklungDiv.style.display = "block";
@@ -184,33 +233,22 @@ function zeigeEntwicklung() {
   const container = document.getElementById("entwicklungButtons");
   container.innerHTML = "";
 
-  const hist = geschichten.find(h => h.person === personSelect.value && h.ort === ortSelect.value && h.ereignis === ereignisSelect.value);
-  hist.entwicklungen.forEach(text => {
+  entwicklungen.forEach(text => {
     const btn = document.createElement("button");
-    btn.innerText = capitalizeFirstLetter(text);
+    btn.innerText = capitalizeFirstLetter(text.replace("{PRONOMEN}", pronomen));
     btn.onclick = () => {
-      story += " " + capitalizeFirstLetter(text);
+      story += " " + capitalizeFirstLetter(text.replace("{PRONOMEN}", pronomen));
       document.getElementById("finalText").innerText = story;
       container.querySelectorAll("button").forEach(b => { b.disabled = true; if(b!==btn) b.style.opacity=0.5; });
       btn.style.backgroundColor = "#ff4444";
-
-      // Mostrar botón intermedio de Konsequenz con fade-in
-      const btnContainer = document.getElementById("konsequenzButtonTriggerContainer");
-      btnContainer.style.transition = "opacity 0.8s";
-      btnContainer.style.opacity = 1;
+      document.getElementById("konsequenzButtonTriggerContainer").style.opacity = 1;
     };
     container.appendChild(btn);
   });
 }
 
-// Mostrar consecuencias al hacer clic en "Und nun?"
+// Consecuencias finales
 document.getElementById("showKonsequenzBtn").onclick = () => {
-  const hist = geschichten.find(h => h.person === personSelect.value && h.ort === ortSelect.value && h.ereignis === ereignisSelect.value);
-  showConsequences(hist.pronomen);
-};
-
-// Consecuencia final
-function showConsequences(pronomen) {
   const konsequenzDiv = document.getElementById("konsequenz");
   konsequenzDiv.style.display = "block";
   konsequenzDiv.style.opacity = 1;
@@ -233,7 +271,7 @@ function showConsequences(pronomen) {
     };
     container.appendChild(btn);
   });
-}
+};
 </script>
 
 </body>
